@@ -6,6 +6,10 @@ namespace BlackjackBasicStrategy
 {
     public enum Action
     {
-        Stand,
+         Surrender = 0,
+         Split = 1,
+         Double = 2,
+         Stand = 3,
+         Hit = 4,
     }
 }
