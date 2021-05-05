@@ -87,7 +87,7 @@ namespace BlackjackBasicStrategy.Tests
         [TestCase("2")]
         [TestCase("4")]
         [TestCase("6")]
-        public void Strategise_Given6sAndDealer2To6_Splits(string dealerCard)
+        public void Strategise_Given6sAndDealer2To6_Splits(string dealerCard) // Only split on 2 with DAS
         {
             Assert.That(Strategiser.Strategise("6", "6", dealerCard), Is.EqualTo(Action.Split));
         }

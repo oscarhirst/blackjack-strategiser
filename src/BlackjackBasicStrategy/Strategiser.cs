@@ -4,8 +4,41 @@
 
 namespace BlackjackBasicStrategy
 {
+    using System.Runtime.Serialization.Formatters;
+    using System.Security.Cryptography.X509Certificates;
+
     public class Strategiser
     {
+        // todo: merge arrays into 3d array?
+        private static readonly Action?[,] CardPairAction = new Action?[9, 9]
+        {
+            // 2
+            { Action.Split, Action.Split, Action.Split, Action.Split, Action.Split, Action.Split, null, null, null, }, // 2
+            { Action.Split, Action.Split, Action.Split, Action.Split, Action.Split, Action.Split, Action.Hit, Action.Hit, Action.Hit, }, // 3
+            { null, null, null, Action.Split, Action.Split, null, null, null, null, }, // 4
+            { Action.Double, Action.Double, Action.Double, Action.Double, Action.Double, Action.Double, Action.Double, Action.Double, null, }, // 5
+            { Action.Split, Action.Split, Action.Split, Action.Split, Action.Split, null, null, null, null, }, // 6
+            { Action.Split, Action.Split, Action.Split, Action.Split, Action.Split, Action.Split, null, null, null, }, // 7
+            { Action.Split,  Action.Split,  Action.Split,  Action.Split,  Action.Split,  Action.Split,  Action.Split,  Action.Split,  Action.Split,  }, // 8
+            { Action.Split,  Action.Split,  Action.Split,  Action.Split,  Action.Split,  Action.Stand,  null,  Action.Split,  Action.Stand,  }, // 9
+            { null, null, null, null, null, null, null, null, null, }, // 10
+        };
+
+        private static readonly Action?[,] HardHandTotalActions = new Action?[,]
+        {
+            // 2
+            { null, null, null, null, null, null, null, null, null, }, // 8
+            { Action.Hit,  Action.Double,  Action.Double,  Action.Double,  Action.Double, Action.Hit, Action.Hit, Action.Hit, Action.Hit, }, // 9
+            { Action.Double, Action.Double, Action.Double, Action.Double, Action.Double, Action.Double, Action.Double, Action.Double, null, }, // 10
+            { Action.Double, Action.Double, Action.Double, Action.Double, Action.Double, Action.Double, Action.Double, Action.Double, Action.Double, }, // 11
+            { null, null, Action.Stand, Action.Stand, Action.Stand, null, null, null, null, }, // 12
+            { Action.Stand, Action.Stand, Action.Stand, Action.Stand, Action.Stand, Action.Hit, Action.Hit, Action.Hit, Action.Hit, }, // 13
+            { Action.Stand, Action.Stand, Action.Stand, Action.Stand, Action.Stand, Action.Hit, Action.Hit, Action.Hit, Action.Hit, }, // 14
+            { Action.Stand, Action.Stand, Action.Stand, Action.Stand, Action.Stand, Action.Hit, Action.Hit, Action.Hit, Action.Hit, }, // 15
+            { Action.Stand, Action.Stand, Action.Stand, Action.Stand, Action.Stand, Action.Hit, Action.Hit, Action.Hit, Action.Hit, }, // 16
+            { Action.Stand, Action.Stand, Action.Stand, Action.Stand, Action.Stand, Action.Stand, Action.Stand, Action.Stand, Action.Stand, }, // 17
+        };
+
         /// <summary>
         /// Tells a blackjack player the action that basic strategy suggests, given their hand.
         /// </summary>
@@ -29,52 +62,36 @@ namespace BlackjackBasicStrategy
 
             /*
              * Should surrender?
-             * Should split?
              */
             if (card1 == ace && card2 == ace)
             {
                 return Action.Split;
             }
 
-            /*bool softHand = false;
-            if (card1 == ace || card2 == ace)
-            {
-                softHand = true;
-            }*/
-
             var card1Value = CalculateCardValue(card1);
             var card2Value = CalculateCardValue(card2);
             var dealerCardValue = CalculateCardValue(dealerCard);
 
-            bool IsPairOf(int cardValue) => card1Value == cardValue && card2Value == cardValue;
+            Action? action;
 
-            if ((IsPairOf(9) && dealerCardValue != 7 && dealerCardValue < 10) ||
-                IsPairOf(8) ||
-                (IsPairOf(7) && dealerCardValue < 8) ||
-                (IsPairOf(6) && dealerCardValue < 7) ||
-                (IsPairOf(4) && (dealerCardValue == 5 || dealerCardValue == 6)) ||
-                (IsPairOf(3) && dealerCardValue < 8) ||
-                (IsPairOf(2) && dealerCardValue < 8))
+            if (card1Value == card2Value)
             {
-                return Action.Split;
+                var cardKey = card1Value - 2;
+                var dealerKey = dealerCardValue - 2;
+
+                action = CardPairAction[cardKey, dealerKey];
+                if (action != null)
+                {
+                    return action.Value;
+                };
             }
 
             var handValue = card1Value + card2Value;
 
-            // Should double?
-            if (handValue == 11 ||
-                (dealerCardValue < 10 && (IsPairOf(5) || handValue == 10)))
+            action = HardHandTotalActions[handValue - 8, dealerCardValue - 2];
+            if (action != null)
             {
-                return Action.Double;
-            }
-
-            // Should stand?
-            if (handValue == 17 ||
-                (handValue > 12 && handValue < 17 && dealerCardValue < 7) ||
-                (handValue == 12 && dealerCardValue > 3 && dealerCardValue < 7) ||
-                IsPairOf(9))
-            {
-                return Action.Stand;
+                return action.Value;
             }
 
             return Action.Hit;
